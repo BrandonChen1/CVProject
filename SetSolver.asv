@@ -1,0 +1,16 @@
+function SetSolver(fileName)
+    fileName = "IMG_7542.jpg"
+    defineBlackBoxes(fileName)
+end
+
+function defineBlackBoxes(fileName)
+    image_in = "IMG_7542.jpg";
+    im_orig = imread(image_in);
+    grayscaleImage = rgb2gray(im_orig);
+    bwImage = im2bw(grayscaleImage,0.7);    
+    %imshow(bwImage);
+    stats = regionprops(bwImage,'all');
+    allImage = stats(:).Image;
+    size()
+end
+
