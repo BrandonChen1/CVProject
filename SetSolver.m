@@ -4,7 +4,7 @@ function SetSolver(fileName)
 end
 
 function defineBlackBoxes(fileName)
-    image_in = "Images/IMG_7666.jpg";
+    image_in = "Images/IMG_7680.jpg";
     im_orig = imread(image_in);
     padvalue = 0; % or 1 if image is single, double, or logical.
     im_orig = padarray(im_orig, [20,20],255);
@@ -22,14 +22,17 @@ function defineBlackBoxes(fileName)
     figure
     imshow(bwImageClosed);
     stats = regionprops(bwImageClosed,'all');
+    
     for idx = 1:size(stats)
         boundingBox = stats(idx).BoundingBox;
-        cropped_image = imcrop(im_orig, boundingBox);
-        %hold on 
-        %rectangle('Position', [boundingBox(1), boundingBox(2), boundingBox(3), boundingBox(4)] , 'Edgecolor' , 'c', 'LineWidth', 2);
+        %cropped_image = imcrop(im_orig, boundingBox);
+        hold on 
+        rectangle('Position', [boundingBox(1), boundingBox(2), boundingBox(3), boundingBox(4)] , 'Edgecolor' , 'c', 'LineWidth', 2);
+        
+        pause(2);
         %figure;
-%         imshow(cropped_image);
+        %imshow(cropped_image);
     end
-    
+
 end
 
