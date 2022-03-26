@@ -24,12 +24,12 @@ function defineBlackBoxes(fileName)
     stats = regionprops(bwImageClosed,'all');
     for idx = 1:size(stats)
         boundingBox = stats(idx).BoundingBox;
-%         cropped_image = imcrop(im_orig, boundingBox);
-        hold on 
-        rectangle('Position', [boundingBox(1), boundingBox(2), boundingBox(3), boundingBox(4)] , 'Edgecolor' , 'c', 'LineWidth', 2);
-
+        cropped_image = imcrop(im_orig, boundingBox);
+        %hold on 
+        %rectangle('Position', [boundingBox(1), boundingBox(2), boundingBox(3), boundingBox(4)] , 'Edgecolor' , 'c', 'LineWidth', 2);
         %figure;
-        %imshow(cropped_image);
+%         imshow(cropped_image);
     end
+    
 end
 
