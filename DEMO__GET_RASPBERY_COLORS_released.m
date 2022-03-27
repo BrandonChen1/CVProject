@@ -10,7 +10,7 @@ INTERACTIVE = 1;
     if nargin < 1
         % This is a default filename.
         % It works for me, in my directory, but won't work for you...
-        fn = 'Images/IMG_7680.jpg';
+        fn = 'TestImages/Border.jpg';
     end
     
     if  INTERACTIVE
@@ -66,18 +66,21 @@ INTERACTIVE = 1;
     %
     im_lab      = rgb2lab( im_rgb );
     
+    im_l = im_lab(:,:,1);
     im_a        = im_lab(:,:,2);
     im_b        = im_lab(:,:,3);
 %     
 %     Already have these values:
 %     fg_indices  = sub2ind( size(im_lab), round(y_fg), round(x_fg) );
-    fg_a        = im_a( fg_indices )
-    fg_b        = im_b( fg_indices )
+    fg_l = im_l(fg_indices);
+    fg_a        = im_a( fg_indices );
+    fg_b        = im_b( fg_indices );
     
 %     Already have these values:
 %     bg_indices  = sub2ind( size(im_klab), round(y_bg), round(x_bg) );
-    bg_a        = im_a( bg_indices )
-    bg_b        = im_b( bg_indices )
+    bg_l =      im_l(bg_indices);
+    bg_a        = im_a( bg_indices );
+    bg_b        = im_b( bg_indices );
     
     figure('Position',[10 10 1024 768]);
     plot( fg_a, fg_b, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 16 );
@@ -91,7 +94,7 @@ INTERACTIVE = 1;
 
     
     % COMPUTE COVARIANCE FOR FG POINTS IN ab SPACE:
-    fg_ab       = [ fg_a fg_b ];                    % This forms a matrix of the two features of the 
+    fg_ab       = [fg_l fg_a fg_b ]                    % This forms a matrix of the two features of the 
                                                     % foreground object.
     mean_fg     = mean( fg_ab );                    % Their mean
     cov_fg      = cov( fg_ab );
