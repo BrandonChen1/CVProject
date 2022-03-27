@@ -9,10 +9,18 @@ function defineBlackBoxes(fileName)
     padvalue = 0; % or 1 if image is single, double, or logical.
     im_orig = padarray(im_orig, [20,20],255);
     grayscaleImage = rgb2gray(im_orig);
+    %figure
+    %imshow(im_orig);
+    %figure
+    %imshow(grayscaleImage);
     bwImage = im2bw(grayscaleImage,.3);
+    %figure
+    %imshow(bwImage)
     se = strel("disk", 8);
     bwImageOpened = imopen(bwImage, se);
     bwImageClosed = imclose(bwImageOpened,se);
+%     figure
+%     imshow(bwImageClosed);
     stats = regionprops(bwImageClosed,'all');
 
     % store the images in an array that is not sorted
@@ -48,9 +56,10 @@ function defineBlackBoxes(fileName)
 %         rectangle('Position', [boundingBox(1), boundingBox(2), boundingBox(3), boundingBox(4)] , 'Edgecolor' , 'c', 'LineWidth', 2);
         
 %         pause(2);
+        %figure;
+        %imshow(cropped_image);
     end
-    
-    % This is to sort the rows and cols of the cards
+    bb1
     [bb1, idx] = sortrows(bb1, 2);
     col1 = col1(idx);
     [bb2, idx] = sortrows(bb2, 2);
@@ -59,24 +68,45 @@ function defineBlackBoxes(fileName)
     col3 = col3(idx);
     [bb4, idx] = sortrows(bb4, 2);
     col4 = col4(idx);
-
-    % combine the cards into an array representing the original image
     cards = [col1 col2 col3 col4];
+    cards
+    figure;
     for row = 1: size(cards,1)
         for col = 1: size(cards, 2)
-            card = cards{row, col};
-            [color] = identifyColor(card);
-            figure;
-            imshow(card);
-            title(color);
-            pause(2);
-
+            subplot(3, 4, (row-1)*4+col)
+            image = cards{row,col};
+            imshow(image)
         end
+    end
+
+%     purpleBoundingBox = stats(2).BoundingBox;
+%     purple_cropped_image = imcrop(im_orig, purpleBoundingBox);
+%     [color] = identifyColor(purple_cropped_image);
+%     disp(color);
+
+%     orangeBoundingBox = stats(5).BoundingBox;
+%     orange_cropped_image = imcrop(im_orig, orangeBoundingBox);
+%     [color] = identifyColor(orange_cropped_image);
+%     disp(color);
+
+% 
+%     greenBoundingBox = stats(11).BoundingBox;
+%     green_cropped_image = imcrop(im_orig, greenBoundingBox);
+%     [color] = identifyColor(green_cropped_image);
+%     disp(color);
+
+    for idx = 2:size(stats)
+        boundingBox = stats(idx).BoundingBox;
+        cropped_image = imcrop(im_orig, boundingBox);
+        [color] = identifyColor(cropped_image);
+        figure;
+        imshow(cropped_image);
+        title(color);
     end
 end
 
 % returns what color the image is
-% imageArray is the image
+% imageArray is the rgb value of a card
 function [color] = identifyColor(imageArray)
 %    figure
 %    imshow(imageArray);
