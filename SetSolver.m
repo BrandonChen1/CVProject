@@ -5,6 +5,7 @@ end
 
 function defineBlackBoxes(fileName)
     image_in = "Images/IMG_7534.jpg";
+    image_in = "Images/IMG_7681.jpg";
     im_orig = imread(image_in);
     padvalue = 0; % or 1 if image is single, double, or logical.
     im_orig = padarray(im_orig, [20,20],255);
@@ -62,16 +63,41 @@ function defineBlackBoxes(fileName)
 
     % combine the cards into an array representing the original image
     cards = [col1 col2 col3 col4];
-    for row = 1: size(cards,1)
-        for col = 1: size(cards, 2)
-            card = cards{row, col};
-            [color,number] = identifyColor(card);
-            figure;
-            imshow(card);
-            formattedTitle = sprintf('%s : %d', color, number);
-            title(formattedTitle);
-            pause(2);
+%     for row = 1: size(cards,1)
+%         for col = 1: size(cards, 2)
+%             card = cards{row, col};
+%             [color,number] = identifyColor(card);
+%             figure;
+%             imshow(card);
+%             formattedTitle = sprintf('%s : %d', color, number);
+%             title(formattedTitle);
+%             pause(2);
+%     cardArray = [col1 col2 col3 col4];
+%     
+    % create a color cell array that represents the colors for each card
+    % this is where we can create all the different arrays
+    % color array
+    colorArray = {};
+    % shade array
+    shadeArray = {};
+    % shape array
+    shapeArray = {};
+    % number array
+    numberArray = {};
+    
+    % loop through all of the cards and call the different helper functions
+    % to separate the properties
+    for row = 1: size(cardArray,1)
+        colorRow = {};
+        for col = 1: size(cardArray, 2)
+            % get the card
+            card = cardArray{row, col};
+            % get the color of the card
+            [color] = identifyColor(card);
+            % put the color into a temp row
+            colorRow = [colorRow color];
         end
+        colorArray = [colorArray; colorRow];
     end
 %     testingCard = cards{3,3};
 %     [color,number] = identifyColor(testingCard);

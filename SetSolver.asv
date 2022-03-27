@@ -10,7 +10,11 @@ function defineBlackBoxes(fileName)
     im_orig = padarray(im_orig, [20,20],255);
     grayscaleImage = rgb2gray(im_orig);
     bwImage = im2bw(grayscaleImage,.3);
+<<<<<<< HEAD
     se = strel("disk", 20);
+=======
+    se = strel("disk", 8);
+>>>>>>> f76db89c06d31d5615012102c7dc9948c377d720
     bwImageOpened = imopen(bwImage, se);
     bwImageClosed = imclose(bwImageOpened,se);
     stats = regionprops(bwImageClosed,'all');
@@ -61,6 +65,7 @@ function defineBlackBoxes(fileName)
     col4 = col4(idx);
 
     % combine the cards into an array representing the original image
+<<<<<<< HEAD
     cards = [col1 col2 col3 col4];
     for row = 1: size(cards,1)
         for col = 1: size(cards, 2)
@@ -81,12 +86,47 @@ function defineBlackBoxes(fileName)
 %     formattedTitle = sprintf('%s : %d', color, number);
 %     title(formattedTitle);
 %     pause(2);
+=======
+    cardArray = [col1 col2 col3 col4];
+    
+    % create a color cell array that represents the colors for each card
+    % this is where we can create all the different arrays
+    % color array
+    colorArray = {};
+    % shade array
+    shadeArray = {};
+    % shape array
+    shapeArray = {}
+    % number array =
+    for row = 1: size(cardArray,1)
+        colorRow = {};
+        for col = 1: size(cardArray, 2)
+            % get the card
+            card = cardArray{row, col};
+            % get the color of the card
+            [color] = identifyColor(card);
+            % put the color into a temp row
+            colorRow = [colorRow color];
+%             figure;
+%             imshow(card);
+%             title(color);
+%             pause(2);
+        end
+        colorArray = [colorArray; colorRow];
+    end
+    colorArray
+>>>>>>> f76db89c06d31d5615012102c7dc9948c377d720
 end
 
 % returns what color the image is
 % imageArray is the image
+<<<<<<< HEAD
 function [color,number] = identifyColor(imageArray)
 %    figure;
+=======
+function [color] = identifyColor(imageArray)
+%    figure
+>>>>>>> f76db89c06d31d5615012102c7dc9948c377d720
 %    imshow(imageArray);
    %Convert into the color space
    %Run regionprop
