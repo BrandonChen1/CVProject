@@ -5,20 +5,18 @@ end
 
 function defineBlackBoxes(fileName)
 %     hist match to 7542
-    image_in = "Images/IMG_7545.jpg";
-    non_blurry = "Images/IMG_7542.jpg";
+    image_in = "Images/IMG_7649.jpg";
+    non_blurry = "Images/IMG_7545.jpg";
     non_blurry_im = imread(non_blurry);
     im_orig = imread(image_in);
     figure;imshow(im_orig);
-    im_orig_matched = imhistmatch(im_orig, non_blurry_im);
-    padvalue = 0; % or 1 if image is single, double, or logical.
+    im_orig_matched = imhistmatch(im_orig, non_blurry_im, 'Method', 'polynomial');
     im_orig = padarray(im_orig, [20,20],255);
     grayscaleImage = rgb2gray(im_orig);
     bwImage = im2bw(grayscaleImage,.3);
     se = strel("disk", 20);
     bwImageOpened = imopen(bwImage, se);
     bwImageClosed = imclose(bwImageOpened,se);
-    figure; imshow(bwImageClosed);
     stats = regionprops(bwImageClosed,'all');
 
 
@@ -37,6 +35,7 @@ function defineBlackBoxes(fileName)
     for idx = 2:size(stats)
         boundingBox = stats(idx).BoundingBox;
         %create bounding boxes with the histogram match
+%         cropped_image = imcrop(im_orig, boundingBox);
         cropped_image = imcrop(im_orig_matched, boundingBox);
         if (idx < 5)
             bb1 = [bb1;num2cell(boundingBox)];
@@ -120,6 +119,7 @@ function defineBlackBoxes(fileName)
 end
 
 function [color] = identifyColorTemp(imageArray)
+    figure; imshow(imageArray);
     grayscaleImage = rgb2gray(imageArray);
     bwImage = im2bw(grayscaleImage, .8);
     bwImage = padarray(bwImage, [20,20],0);
@@ -128,7 +128,6 @@ function [color] = identifyColorTemp(imageArray)
     bwImage = ~bwImage;
     stats = regionprops(bwImage,'all');
     color = '';
-    figure;imshow(imageArray);
     for i=2:size(stats)
         if (stats(i).Area < 1000)
             continue;
@@ -173,7 +172,6 @@ function [color] = identifyColorRange(imageArray)
             end
        end
    end 
-%    figure; imshow(test);
    color_pixel_count_array
     if (max(color_pixel_count_array) == color_pixel_count_array(1))
         color = "Orange";
