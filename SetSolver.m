@@ -5,7 +5,7 @@ end
 
 function defineBlackBoxes(fileName)
 %     hist match to 7542
-    image_in = "Images/IMG_7649.jpg";
+    image_in = "Images/IMG_7671.jpg";
     non_blurry = "Images/IMG_7545.jpg";
     non_blurry_im = imread(non_blurry);
     im_orig = imread(image_in);
@@ -98,17 +98,28 @@ function defineBlackBoxes(fileName)
     % to separate the properties
     for row = 1: size(cardArray,1)
         colorRow = {};
+        numberRow = {};
+        shadeRow = {};
         for col = 1: size(cardArray, 2)
             % get the card
             card = cardArray{row, col};
             % get the color of the card
-            [color] = identifyColorTemp(card);
+%             [color] = identifyColorTemp(card);
+%             [number] = identifyNumberShapes(card);
+            [shade] = identifyShade(card);
+%             [shape] = identifyShape(card);
             % put the color into a temp row
-            colorRow = [colorRow color];
+%             colorRow = [colorRow color];
+%             numberRow = [numberRow number];
+            shadeRow = [shadeRow shade];
         end
-        colorArray = [colorArray; colorRow];
+%         colorArray = [colorArray; colorRow];
+%         numberArray = [numberArray; numberRow];
+        shadeArray = [shadeArray; shadeRow];
     end
     colorArray
+    numberArray
+    shadeArray
 %     testingCard = cards{3,4};
 %     [color] = identifyColorTemp(testingCard);
 %     figure;
@@ -119,7 +130,6 @@ function defineBlackBoxes(fileName)
 end
 
 function [color] = identifyColorTemp(imageArray)
-    figure; imshow(imageArray);
     grayscaleImage = rgb2gray(imageArray);
     bwImage = im2bw(grayscaleImage, .8);
     bwImage = padarray(bwImage, [20,20],0);
@@ -128,6 +138,7 @@ function [color] = identifyColorTemp(imageArray)
     bwImage = ~bwImage;
     stats = regionprops(bwImage,'all');
     color = '';
+    color_pixel_count_array = [0 0 0];
     for i=2:size(stats)
         if (stats(i).Area < 1000)
             continue;
@@ -138,17 +149,25 @@ function [color] = identifyColorTemp(imageArray)
         cropped_image = imcrop(imageArray, boundingBox);
 %         figure;
 %         imshow(cropped_image);
-        [color] = identifyColorRange(cropped_image);
-        color
+        [color_pixel_count_array] = identifyColorRange(cropped_image, color_pixel_count_array);
+
     end
+    color_pixel_count_array
+    if (max(color_pixel_count_array) == color_pixel_count_array(1))
+        color = "Orange";
+    elseif (max(color_pixel_count_array) == color_pixel_count_array(2))
+        color = "Purple";
+    else
+        color = "Green";
+    end
+    color
 
 end
 
-function [color] = identifyColorRange(imageArray)
+function [color_pixel_count_array] = identifyColorRange(imageArray, color_pixel_count_array)
    imageToLab = rgb2lab(imageArray);
    im_a = imageToLab(:,:,2);
    im_b = imageToLab(:,:,3);
-   color_pixel_count_array = [0 0 0];
    test = zeros(size(imageArray, 1), size(imageArray, 2));
    dim_size = size(im_a);
    for row = 1:dim_size(1)
@@ -172,12 +191,114 @@ function [color] = identifyColorRange(imageArray)
             end
        end
    end 
-   color_pixel_count_array
-    if (max(color_pixel_count_array) == color_pixel_count_array(1))
-        color = "Orange";
-    elseif (max(color_pixel_count_array) == color_pixel_count_array(2))
-        color = "Purple";
-    else
-        color = "Green";
+end
+
+function [number] = identifyNumberShapes(imageArray)
+    grayscaleImage = rgb2gray(imageArray);
+    bwImage = im2bw(grayscaleImage, .8);
+    bwImage = padarray(bwImage, [20,20],0);
+    se = strel("disk", 3);
+    bwImage = imopen(bwImage, se);
+    bwImage = ~bwImage;
+    stats = regionprops(bwImage,'all');
+    number = 0;
+    for i=2:size(stats)
+        if (stats(i).Area < 1000)
+            continue;
+        end
+        number = number + 1;
     end
+end
+
+function [shade] = identifyShade(imageArray)
+    grayscaleImage = rgb2gray(imageArray);
+    bwImage = im2bw(grayscaleImage, .9);
+    bwImage = padarray(bwImage, [20,20],0);
+    se = strel("disk", 1);
+%     bwImage = imdilate(bwImage, se);
+%     bwImage = imopen(bwImage, se);
+%     stats = regionprops(bwImage,'all');
+%     shade = '';
+%     number = 0;
+%     figure; imshow(bwImage);
+%     
+%     for i=1:size(stats)
+%         if (stats(i).Area < 1000)
+%             continue;
+%         end
+%         number = number + 1;
+%     end
+%     if number == 1
+%         shade = 'filled';
+%     elseif number > 1 && number < 5
+%         shade = 'empty';
+%     else
+%         shade = 'stripe';
+%     end
+%     shade = number;
+    
+    inverted = ~bwImage;
+    figure; imshow(inverted);
+    stats = regionprops(inverted, 'all');
+    shade = '';
+    totalArea = 0;
+    totalFilledArea = 0;
+    for i = 2:size(stats)
+        if (stats(i).Area < 1000)
+            continue;
+        end
+        totalArea = totalArea + stats(i).Area;
+        totalFilledArea = totalFilledArea + stats(i).FilledArea;
+    end
+    formattedTitle = sprintf('totalArea = %d, totalFilledArea = %d', totalArea, totalFilledArea);
+    title(formattedTitle);
+    pause(5)
+    ratio = totalArea/totalFilledArea;
+    if ratio > .95
+        shade = ratio;
+    elseif ratio < .25
+        shade = ratio;
+    else
+        shade = ratio;
+    end
+end
+
+function [shape] = identifyShape(imageArray)
+%     figure; imshow(imageArray);
+    grayscaleImage = rgb2gray(imageArray);
+    bwImage = im2bw(grayscaleImage, .8);
+    bwImage = padarray(bwImage, [20,20],0);
+    se = strel("disk", 3);
+    bwImage = imopen(bwImage, se);
+    bwImage = ~bwImage;
+    STATS = regionprops(bwImage,'all');
+
+    for i=2:size(STATS)
+        if (STATS(i).Area > 1000)
+            figure;
+            imshow(STATS(i).FilledImage);
+            hold on;
+            image = STATS(i).FilledImage;
+
+            %Circle = 9.9
+            %Squiggly = 9.8
+            %Rhombus = < 9 
+            area = STATS(i).Area;
+            filledArea = STATS(i).FilledArea;
+            
+            formattedTitle = sprintf(' Solidity = %s, area = %d, filledArea = %d', STATS(i).Solidity, area, filledArea);
+%             if (stats(i).Solidity > .99)
+%                 shape = "Circle";
+%             elseif (stats(i).Solidity > .98)
+%                 shape = "Rhombus";
+%             else
+%                 shape = "Squiggly";
+%             end           
+%             formattedTitle = sprintf(' Solidity = %s, Shape= %s', stats(i).Solidity, shape);
+            title(formattedTitle);
+            pause(1);
+            break;
+        end
+    end
+    shape = "";
 end
