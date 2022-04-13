@@ -5,7 +5,7 @@ end
 
 function defineBlackBoxes(fileName)
 %     hist match to 7542
-    image_in = "Images/IMG_7671.jpg";
+    image_in = "Images/IMG_7539.jpg";
     non_blurry = "Images/IMG_7545.jpg";
     non_blurry_im = imread(non_blurry);
     im_orig = imread(image_in);
@@ -100,26 +100,30 @@ function defineBlackBoxes(fileName)
         colorRow = {};
         numberRow = {};
         shadeRow = {};
+        shapeRow = {};
         for col = 1: size(cardArray, 2)
             % get the card
             card = cardArray{row, col};
             % get the color of the card
-%             [color] = identifyColorTemp(card);
-%             [number] = identifyNumberShapes(card);
+            [color] = identifyColorTemp(card);
+            [number] = identifyNumberShapes(card);
             [shade] = identifyShade(card);
-%             [shape] = identifyShape(card);
+            [shape] = identifyShape(card);
             % put the color into a temp row
-%             colorRow = [colorRow color];
-%             numberRow = [numberRow number];
+            colorRow = [colorRow color];
+            numberRow = [numberRow number];
             shadeRow = [shadeRow shade];
+            shapeRow = [shapeRow shape];
         end
-%         colorArray = [colorArray; colorRow];
-%         numberArray = [numberArray; numberRow];
+        colorArray = [colorArray; colorRow];
+        numberArray = [numberArray; numberRow];
         shadeArray = [shadeArray; shadeRow];
+        shapeArray = [shapeArray; shapeRow];
     end
     colorArray
     numberArray
     shadeArray
+    shapeArray
 %     testingCard = cards{3,4};
 %     [color] = identifyColorTemp(testingCard);
 %     figure;
@@ -127,6 +131,8 @@ function defineBlackBoxes(fileName)
 %     formattedTitle = sprintf('%s : %d', color, number);
 %     title(formattedTitle);
 %     pause(2);
+    returnSetMatrix = findSet(shapeArray, shadeArray, colorArray, numberArray);
+    returnSetMatrix
 end
 
 function [color] = identifyColorTemp(imageArray)
@@ -152,15 +158,18 @@ function [color] = identifyColorTemp(imageArray)
         [color_pixel_count_array] = identifyColorRange(cropped_image, color_pixel_count_array);
 
     end
-    color_pixel_count_array
+%     color_pixel_count_array
     if (max(color_pixel_count_array) == color_pixel_count_array(1))
-        color = "Orange";
+        %Orange = 1
+        color = 1;
     elseif (max(color_pixel_count_array) == color_pixel_count_array(2))
-        color = "Purple";
+        %Purple = 2
+        color = 2;
     else
-        color = "Green";
+        %Green
+        color = 3;
     end
-    color
+%     color
 
 end
 
@@ -238,7 +247,7 @@ function [shade] = identifyShade(imageArray)
 %     shade = number;
     
     inverted = ~bwImage;
-    figure; imshow(inverted);
+%     figure; imshow(inverted);
     stats = regionprops(inverted, 'all');
     shade = '';
     totalArea = 0;
@@ -250,55 +259,130 @@ function [shade] = identifyShade(imageArray)
         totalArea = totalArea + stats(i).Area;
         totalFilledArea = totalFilledArea + stats(i).FilledArea;
     end
-    formattedTitle = sprintf('totalArea = %d, totalFilledArea = %d', totalArea, totalFilledArea);
-    title(formattedTitle);
-    pause(5)
+%     formattedTitle = sprintf('totalArea = %d, totalFilledArea = %d', totalArea, totalFilledArea);
+%     title(formattedTitle);
+%     pause(5)
     ratio = totalArea/totalFilledArea;
     if ratio > .95
-        shade = ratio;
+        %Filled = 1
+        shade = 1;
     elseif ratio < .25
-        shade = ratio;
+        %Empty = 2
+        shade = 2;
     else
-        shade = ratio;
+        %Stripe = 3
+        shade = 3;
     end
 end
 
 function [shape] = identifyShape(imageArray)
-%     figure; imshow(imageArray);
     grayscaleImage = rgb2gray(imageArray);
-    bwImage = im2bw(grayscaleImage, .8);
+    bwImage = im2bw(grayscaleImage, .9);
     bwImage = padarray(bwImage, [20,20],0);
-    se = strel("disk", 3);
-    bwImage = imopen(bwImage, se);
-    bwImage = ~bwImage;
-    STATS = regionprops(bwImage,'all');
-
-    for i=2:size(STATS)
-        if (STATS(i).Area > 1000)
-            figure;
-            imshow(STATS(i).FilledImage);
-            hold on;
-            image = STATS(i).FilledImage;
-
-            %Circle = 9.9
-            %Squiggly = 9.8
-            %Rhombus = < 9 
-            area = STATS(i).Area;
-            filledArea = STATS(i).FilledArea;
-            
-            formattedTitle = sprintf(' Solidity = %s, area = %d, filledArea = %d', STATS(i).Solidity, area, filledArea);
-%             if (stats(i).Solidity > .99)
-%                 shape = "Circle";
-%             elseif (stats(i).Solidity > .98)
-%                 shape = "Rhombus";
-%             else
-%                 shape = "Squiggly";
-%             end           
-%             formattedTitle = sprintf(' Solidity = %s, Shape= %s', stats(i).Solidity, shape);
-            title(formattedTitle);
-            pause(1);
-            break;
+    inverted = ~bwImage;
+    shape = 1;
+    stats = regionprops(inverted,'all');
+    for index  = 2 : size(stats)
+        if (stats(index).Area < 1000)
+            continue;
+        end
+        filledImage = stats(index).FilledImage;
+        edgeImage = edge(filledImage, 'canny');
+        [H,T,R] = hough(edgeImage);
+        P = houghpeaks(H,5,'threshold',ceil(0.3*max(H(:))));
+        lines = houghlines(edgeImage,T,R,P,'FillGap',10,'MinLength',100);
+%         figure; imshow(edgeImage);
+%         hold on;
+%         for k = 1:length(lines)
+%            xy = [lines(k).point1; lines(k).point2];
+%            plot(xy(:,1),xy(:,2),'LineWidth',2,'Color','green');
+%         
+%            % Plot beginnings and ends of lines
+%            plot(xy(1,1),xy(1,2),'x','LineWidth',2,'Color','yellow');
+%            plot(xy(2,1),xy(2,2),'x','LineWidth',2,'Color','red');
+%         end
+        if length(lines) >= 4
+            %Rhombus = 1
+            shape = 1;
+        elseif length(lines) >= 2
+            %Circle = 2
+            shape = 2;
+        else
+            %Squiggly = 3
+            shape  = 3;
         end
     end
-    shape = "";
+end
+
+
+
+
+
+
+function [validNum] = validNumberSet(numMatrix)
+    validNum = false;
+    if (numMatrix(1) == numMatrix(2)) && (numMatrix(1) == numMatrix(3) && (numMatrix(2) == numMatrix(3)))
+        validNum = true;
+    end
+    if (numMatrix(1) ~= numMatrix(2) && numMatrix(2) ~= numMatrix(3) && numMatrix(1) ~= numMatrix(3))
+        validNum = true;
+    end
+end
+
+function [returnSetMatrix] = findSet(shapeArray, shadeArray, colorArray, numberArray)
+    %Assume the input is a 1x12 
+    shapeArray = reshape(shapeArray, 12, 1);
+    shadeArray = reshape(shadeArray, 12, 1);
+    colorArray = reshape(colorArray, 12, 1);
+    numberArray = reshape(numberArray, 12, 1);
+%     shapeArray
+    returnSetMatrix = [0 0 0];
+    %"1,2,3 : 3,4,7 "
+    for cardOne = 1:size(shapeArray,1)
+        for cardTwo = (cardOne+1):size(shapeArray,1)
+            for cardThree = (cardTwo+1):size(shapeArray,1)
+                    
+                shapeSetArray = [shapeArray{cardOne} shapeArray{cardTwo} shapeArray{cardThree}];
+                shadeSetArray = [shadeArray{cardOne} shadeArray{cardTwo} shadeArray{cardThree}];
+                colorSetArray = [colorArray{cardOne} colorArray{cardTwo} colorArray{cardThree}];
+                numberSetArray = [numberArray{cardOne} numberArray{cardTwo} numberArray{cardThree}];
+                validShape = false;
+                validShade = false;
+                validColor = false;
+                validNumber = false;
+                validShape = validNumberSet(shapeSetArray);
+                validShade = validNumberSet(shadeSetArray);
+                validColor = validNumberSet(colorSetArray);
+                validNumber = validNumberSet(numberSetArray);
+
+%                 if(cardOne == 1 && cardTwo == 2 && cardThree == 6)
+%                     shapeSetArray
+%                     shadeSetArray
+%                     colorSetArray
+%                     numberSetArray
+% %                     validShape 
+% %                     validShade 
+% %                     validColor 
+% %                     validNumber 
+%                     numberCondOne = numberSetArray(1) == numberSetArray(2) == numberSetArray(3)
+%                     numberCondTwo = numberSetArray(1) ~= numberSetArray(2) && numberSetArray(2) ~= numberSetArray(3) && numberSetArray(1) ~= numberSetArray(3)
+%                 end
+                if (validShape && validShade && validColor && validNumber)
+                    tempMatrix = [cardOne cardTwo cardThree];
+                    returnSetMatrix = [returnSetMatrix; tempMatrix];
+                end
+%                 if (validShapeSet(shapeSetArray))
+%                     if (validShadeSet(shadeSetArray))
+%                         if(validColorSet(colorSetArray))
+%                             if(validNumberSet(numberSetArray))
+%                                 %This is a valid set
+%                                 tempMatrix = [cardOne cardTwo cardThree];
+%                                 returnSetMatrix = [returnSetMatrix; tempMatrix];
+%                             end
+%                         end
+%                     end
+%                 end
+            end
+        end
+    end
 end
